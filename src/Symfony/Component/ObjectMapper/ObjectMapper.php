@@ -303,6 +303,14 @@ final class ObjectMapper implements ObjectMapperInterface
             }
         }
 
+        while (false !== $parent = $refl->getParentClass()) {
+            foreach ($parent->getProperties() as $property) {
+                if ($this->metadataFactory->create($source, $property->getName())) {
+                    return $parent;
+                }
+            }
+        }
+
         return $targetRefl;
     }
 }

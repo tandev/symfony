@@ -26,7 +26,7 @@ final class ReflectionObjectMapperMetadataFactory implements ObjectMapperMetadat
         try {
             $refl = new \ReflectionClass($object);
             $mapTo = [];
-            foreach (($property ? $refl->getProperty($property) : $refl)->getAttributes(Map::class, \ReflectionAttribute::IS_INSTANCEOF) as $mapAttribute) {
+            foreach (($property ? $this->getReflectionProperty($object, $property) : $refl)->getAttributes(Map::class, \ReflectionAttribute::IS_INSTANCEOF) as $mapAttribute) {
                 $map = $mapAttribute->newInstance();
                 $mapTo[] = new Mapping($map->target, $map->source, $map->if, $map->transform);
             }
@@ -34,6 +34,23 @@ final class ReflectionObjectMapperMetadataFactory implements ObjectMapperMetadat
             return $mapTo;
         } catch (\ReflectionException $e) {
             throw new MappingException($e->getMessage(), $e->getCode(), $e);
+        }
+    }
+
+    /**
+     * @throws \ReflectionException
+     */
+    private function getReflectionProperty(object $object, string $property): \ReflectionProperty
+    {
+        $reflectionClass = new \ReflectionClass($object);
+        while (true) {
+            try {
+                return $reflectionClass->getProperty($property);
+            } catch (\ReflectionException $e) {
+                if (!$reflectionClass = $reflectionClass->getParentClass()) {
+                    throw $e;
+                }
+            }
         }
     }
 }
