@@ -1440,6 +1440,18 @@ class AbstractObjectNormalizerTest extends TestCase
         $this->assertEquals($expected, $normalizer->denormalize($data, ScalarCollectionDocBlockDummy::class));
     }
 
+    public function testDenormalizeConvertsUsingConstructor()
+    {
+        $normalizer = new AbstractObjectNormalizerWithMetadataAndPropertyTypeExtractors();
+        $data = [
+            'values' => [
+            '1',
+            '2'
+        ]];
+
+        $this->assertEquals([1, 2], $normalizer->denormalize($data, ScalarCollectionDocBlockInConstructorVsPropertyDummy::class)->values);
+    }
+
     public function testDenormalizeConvertsScalarCollectionElements()
     {
         $normalizer = new AbstractObjectNormalizerWithMetadataAndPropertyTypeExtractors();
@@ -2296,6 +2308,23 @@ class ScalarCollectionDocBlockDummy
     public function getValues(): ?array
     {
         return $this->values;
+    }
+}
+
+class ScalarCollectionDocBlockInConstructorVsPropertyDummy
+{
+    /**
+     * @var array<int> $values
+     */
+    public readonly array $values;
+
+    /**
+     * @param array<int|string> $values
+     */
+    public function __construct(
+        array $values,
+    ) {
+        $this->values = array_map(static fn (string|int $value) => (int) $value, $values);
     }
 }
 
